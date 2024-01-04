@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Data Display</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid black;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Student Data</h1>
+<h1>Upload CSV File</h1>
+
+<input type="file" id="fileInput" accept=".csv">
+
+<button onclick="handleFile()">Read File</button>
+<a href="index.html">
+    <button>Index page</button>
+    </a>
+<table id="data-table">
+    <!-- Table content will be inserted here using JavaScript -->
+</table>
+
+<script>
+    // Sample CSV data
+    let csvData;
+
+    function handleFile() {
+        const fileInput = document.getElementById('fileInput');
+        const file = fileInput.files[0];
+
+        if (file) {
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                const csvContent = e.target.result;
+                // Now 'csvContent' contains the content of the CSV file
+                console.log(csvContent);
+
+                // You can process the CSV content as needed
+                processCSV(csvContent);
+            };
+
+            reader.readAsText(file);
+        } else {
+            alert('Please select a file before clicking "Read File".');
+        }
+    }
+
+    function writeButtonClick(studentId) {
+        // Add your logic for handling the "Write" button click for a specific student
+        console.log(`Write button clicked for student ID: ${studentId}`);
+        // You can perform further actions here, such as writing data or navigating to another page.
+    }
+
+    function processCSV(csvContent) {
+        // Your code to process the CSV content goes here
+        // For example, you can parse the CSV and display it in the console
+        csvData = csvContent.split('\n').map(row => row.split(/\s*,\s*/));
+        console.log(csvData);
+
+        // Extract headers and data
+        const headers = csvData[0];
+        const dataRows = csvData.slice(1);
+
+        // Create an object to store consolidated student data
+        const studentData = {};
+
+        // Process each row and consolidate data for each student
+        dataRows.forEach(rowData => {
+            // Ensure each row has the correct number of columns
+            const filledRow = rowData.concat(Array(headers.length - rowData.length).fill(''));
+
+            const studentId = filledRow[2];
+
+            // If studentId is not in the object, add a new entry
+            if (!studentData[studentId]) {
+                studentData[studentId] = {
+                    courseid: filledRow[0],
+                    course: filledRow[1],
+                    registrationNumber: filledRow[3],
+                    studentId: studentId,
+                    studentName: filledRow[4],
+                    subjects: [],
+                };
+            }
+
+            // Add subject details to the subjects array
+            studentData[studentId].subjects.push({
+                subjectCode: filledRow[9],
+                subjectDesc: filledRow[10],
+                credit: filledRow[11],
+                grade: filledRow[12],
+            });
+        });
+
+        // Create HTML table
+        const table = document.getElementById('data-table');
+        table.innerHTML = ''; // Clear previous content
+
+        // Create table header
+        const headerRow = table.insertRow();
+        headers.forEach(headerText => {
+            const th = document.createElement('th');
+            th.appendChild(document.createTextNode(headerText));
+            headerRow.appendChild(th);
+        });
+
+        // Create table rows for consolidated student data
+        for (const studentId in studentData) {
+            const student = studentData[studentId];
+            console.log(student);
+            // Create a new table row
+            const row = table.insertRow();
+
+            // Populate the row with student data
+            headers.forEach(header => {
+                const cell = row.insertCell();
+
+                if (header === 'subjectdesc') {
+                    // Display subjects as a list
+                    const subjectsList = student.subjects.map(subject => `${subject.subjectCode}: ${subject.subjectDesc}, ${subject.credit} credits, Grade: ${subject.grade}`).join(', ');
+                    cell.innerHTML = subjectsList;
+                } else {
+                    // Display other headers normally
+                    cell.appendChild(document.createTextNode(student[header]));
+                }
+            });
+
+            // Add a "Write" button to each row
+            const writeButtonCell = row.insertCell();
+            const writeButton = document.createElement('button');
+            writeButton.textContent = 'Write';
+            writeButton.addEventListener('click', () => writeButtonClick(student.studentId));
+            writeButtonCell.appendChild(writeButton);
+        }
+    }
+</script>
+
+</body>
+</html>

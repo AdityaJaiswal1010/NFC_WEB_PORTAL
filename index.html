@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Data Display</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid black;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Student Data</h1>
+<h1>Upload CSV File</h1>
+
+<input type="file" id="fileInput" accept=".csv">
+<button onclick="handleFile()">Read File</button>
+<input type="text" id="searchInput" placeholder="Search by Student ID">
+
+
+<button onclick="handleSearch()">Search</button>
+<a href="consolidate.html">
+    <button>Consolidate page</button>
+</a>
+
+<table id="data-table">
+    <!-- Table content will be inserted here using JavaScript -->
+</table>
+<h4 id="consolidate-data"></h4>
+<button type="button" hidden id="write-button" onclick= "write_button_onclick()">Write</button>
+
+
+<script>
+    // Sample CSV data
+    let csvData;
+    let displayedData; // Store the current displayed data
+
+    function handleFile() {
+        const fileInput = document.getElementById('fileInput');
+        const file = fileInput.files[0];
+
+        if (file) {
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                const csvContent = e.target.result;
+                // Now 'csvContent' contains the content of the CSV file
+                console.log(csvContent);
+
+                // You can process the CSV content as needed
+                processCSV(csvContent);
+            };
+
+            reader.readAsText(file);
+        } else {
+            alert('Please select a file before clicking "Read File".');
+        }
+    }
+
+    function writeButtonClick(studentId) {
+        // Add your logic for handling the "Write" button click for a specific student
+        console.log(`Write button clicked for student ID: ${studentId}`);
+        // You can perform further actions here, such as writing data or navigating to another page.
+    }
+
+    function handleSearch() {
+        const searchInput = document.getElementById('searchInput');
+        const searchTerm = searchInput.value.trim().toLowerCase();
+
+        // Filter the displayed data based on the search term
+        displayedData = csvData.filter(row => row[2].toLowerCase().includes(searchTerm));
+
+        // Update the table with the filtered data
+        if(searchInput==''||displayedData==''||displayedData==null||searchTerm=='')
+        {
+            const consolidateData = document.getElementById('consolidate-data');
+            consolidateData.innerHTML='';
+            updateTable(displayedData,0);
+        }
+            
+        else
+            updateTable(displayedData,1);
+
+    }
+
+    function updateTable(data,constraint) {
+        document.getElementById('write-button').setAttribute('hidden',true);
+        console.log(data);
+        // Create an object to store consolidated student data
+        const studentData = {};
+
+        // Process each row and consolidate data for each student
+        data.forEach(rowData => {
+            // Ensure each row has the correct number of columns
+            const filledRow = rowData.concat(Array(headers.length - rowData.length).fill(''));
+
+            const studentId = filledRow[2];
+
+            // If studentId is not in the object, add a new entry
+            if (!studentData[studentId]) {
+                studentData[studentId] = {
+                    courseid: filledRow[0],
+                    course: filledRow[1],
+                    registrationNumber: filledRow[3],
+                    studentId: studentId,
+                    studentName: filledRow[4],
+                    subjects: [],
+                };
+            }
+
+            // Add subject details to the subjects array
+            studentData[studentId].subjects.push({
+                subjectCode: filledRow[9],
+                subjectDesc: filledRow[10],
+                credit: filledRow[11],
+                grade: filledRow[12],
+            });
+        });
+        console.log(studentData);
+
+        // Convert the object to a string and display it
+        if(constraint){
+            const consolidateData = document.getElementById('consolidate-data');
+        consolidateData.innerHTML='';
+        consolidateData.innerHTML = '<pre>' +JSON.stringify(studentData, null, 2).replace(/\n/g, '<br>') + '</pre>';
+        if(studentData){
+            document.getElementById('write-button').removeAttribute('hidden');
+            
+
+        }
+        
+        //auto button
+        //const button = document.createElement('button')
+
+      //// Set the button text to 'Can you click me?'
+      //button.innerText = 'Write'
+      
+      //button.id = 'mainButton'
+
+      // Attach the "click" event to your button
+      //button.addEventListener('click', () => {
+        // When there is a "click"
+        // it shows an alert in the browser
+        //alert(consolidateData.textContent = JSON.stringify(studentData, null, 2));
+        //button.remove();
+      //})
+
+      //document.body.appendChild(button)
+        }
+        
+
+        const table = document.getElementById('data-table');
+        table.innerHTML = ''; // Clear previous content
+
+        // Create table header
+        const headerRow = table.insertRow();
+        displayedData[0].forEach(headerText => {
+            const th = document.createElement('th');
+            th.appendChild(document.createTextNode(headerText));
+            headerRow.appendChild(th);
+        });
+
+        // Create table rows for consolidated student data
+        for (const rowData of data.slice(1)) {
+            const row = table.insertRow();
+
+            rowData.forEach((cellData, index) => {
+                const cell = row.insertCell();
+
+                if (headers[index] === 'subjectdesc') {
+                    // Display subjects as a list
+                    const subjectsList = cellData.split(',').map(subject => subject.trim()).join('<br>');
+                    cell.innerHTML = subjectsList;
+                } else {
+                    cell.appendChild(document.createTextNode(cellData));
+                }
+            });
+
+            
+        }
+        
+    }
+
+    function processCSV(csvContent) {
+        // Your code to process the CSV content goes here
+        // For example, you can parse the CSV and display it in the console
+        document.getElementById('write-button').setAttribute('hidden',true);
+        csvData = csvContent.split('\n').map(row => row.split(/\s*,\s*/));
+        console.log(csvData);
+
+        // Extract headers and data
+        headers = csvData[0];
+        displayedData = csvData;
+        const consolidateData = document.getElementById('consolidate-data');
+        consolidateData.innerHTML='';
+        // Display the initial data in the table
+        
+        updateTable(displayedData,0);
+
+    }
+</script>
+
+</body>
+</html>
