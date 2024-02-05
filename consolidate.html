@@ -46,12 +46,16 @@
     <h4 id="consolidate-data"></h4>
     <h4 id="club-map-data"></h4>
     <button type="button" hidden id="write-button" onclick="writeButtonClick()">Write</button>
+    <button onclick="prevStudent()">Previous</button>
+    <button onclick="nextStudent()">Next</button>
 
     <script>
         // Sample CSV data
         let csvData;
         let displayedData; // Store the current displayed data
         let headers; // Store headers for CSV data
+        let studentList = [];
+        let currentStudentIndex = 0;
 
         function handleFile() {
             const fileInput = document.getElementById('fileInput');
@@ -89,12 +93,13 @@
             displayedData = csvData.filter(row => row[2].toLowerCase().includes(searchTerm));
 
             // Update the table with the filtered data
-            if (searchInput === '' || displayedData === '' || displayedData === null || searchTerm === '') {
+            if (searchTerm === '') {
                 const consolidateData = document.getElementById('consolidate-data');
                 consolidateData.innerHTML = '';
                 updateTable(displayedData, 0);
-            } else
+            } else {
                 updateTable(displayedData, 1);
+            }
         }
 
         function updateTable(data, constraint) {
@@ -139,58 +144,46 @@
                 });
             });
             console.log(studentData);
-            const studentList = [];
+            studentList = [];
 
             // Loop through the studentData object
-            var i=0;
             for (const studentId in studentData) {
-                i+=1;
-                if(i==studentData.length-1)
-                    break;
                 if (Object.hasOwnProperty.call(studentData, studentId)) {
                     // Push the student struct to the list
                     studentList.push(studentData[studentId]);
                 }
             }
 
-            // Print the studentList array to see the structs
-            console.log('Student List');
-            console.log(studentData);
-            console.log(studentList);
-            console.log(studentList[0]);
-            console.log(studentList.length);
             // Convert the object to a string and display it
             if (constraint) {
                 const consolidateData = document.getElementById('consolidate-data');
                 consolidateData.innerHTML = '';
+            
                 const clubMapData = document.getElementById('club-map-data');
-            clubMapData.innerHTML='';
-            clubMapData.innerHTML = '<pre>' +JSON.stringify(studentData, null, 2).replace(/\n/g, '<br>') + '</pre>';
-                const gender=String(studentData[Object.keys(studentData)[0]].courseid);
-                console.log(gender);
-                if(gender==='1')
-                    var temp='female'
-                else
-                    var temp='male'
+                clubMapData.innerHTML = ''; // Clear previous content
+            
+                const student = studentList[currentStudentIndex]; // Get current student
+            
+                // Determine gender
+                const temp = (student.gender === '1') ? 'female' : 'male';
+            
                 // Display student details
                 const studentDetailsHTML = `
                     <h3>Student Details:</h3>
-                    <p><strong>Student ID:</strong> ${Object.keys(studentData)[0]}</p>
-                    <p><strong>Student Name:</strong> ${studentData[Object.keys(studentData)[0]].studentName}</p>
-                    <p><strong>Course ID:</strong> ${studentData[Object.keys(studentData)[0]].courseid}</p>
-                    <p><strong>Course:</strong> ${studentData[Object.keys(studentData)[0]].course}</p>
-                    <p><strong>Registration Number:</strong> ${studentData[Object.keys(studentData)[0]].registrationNumber}</p>
-                    <p><strong>Month of Passing:</strong> ${studentData[Object.keys(studentData)[0]].monthOfPassing}</p>
-                    <p><strong>Year of Passing:</strong> ${studentData[Object.keys(studentData)[0]].yearOfPassing}</p>
-                    <p><strong>Date of Birth:</strong> ${studentData[Object.keys(studentData)[0]].dob}</p>
-                    <p><strong>ABC Number:</strong> ${studentData[Object.keys(studentData)[0]].ABCno}</p>
+                    <p><strong>Student ID:</strong> ${student.studentId}</p>
+                    <p><strong>Student Name:</strong> ${student.studentName}</p>
+                    <p><strong>Course ID:</strong> ${student.courseid}</p>
+                    <p><strong>Course:</strong> ${student.course}</p>
+                    <p><strong>Registration Number:</strong> ${student.registrationNumber}</p>
+                    <p><strong>Month of Passing:</strong> ${student.monthOfPassing}</p>
+                    <p><strong>Year of Passing:</strong> ${student.yearOfPassing}</p>
+                    <p><strong>Date of Birth:</strong> ${student.dob}</p>
+                    <p><strong>ABC Number:</strong> ${student.ABCno}</p>
                     <p><strong>Gender:</strong> ${temp}</p>
-                    <p><strong>CGPA:</strong> ${studentData[Object.keys(studentData)[0]].cgpa}</p>
-
-
+                    <p><strong>CGPA:</strong> ${student.cgpa}</p>
                 `;
                 consolidateData.innerHTML = studentDetailsHTML;
-                console.log(studentData[Object.keys(studentData)[0]].subjects.map(subject=>subject.subjectDesc));
+            
                 // Display subjects as a list
                 const marksheetHTML = `
                     <h3>Marksheet:</h3>
@@ -199,12 +192,11 @@
                             <th>Semester</th>
                             <th>Subject Code</th>
                             <th>Subject Description</th>
-                            <th> Attendance Code</th>
+                            <th>Attendance Code</th>
                             <th>Credit</th>
                             <th>Grade</th>
-
                         </tr>
-                        ${studentData[Object.keys(studentData)[0]].subjects.map(subject => `
+                        ${student.subjects.map(subject => `
                             <tr>
                                 <td>${subject.semester}</td>
                                 <td>${subject.subjectCode}</td>
@@ -216,7 +208,10 @@
                     </table>
                 `;
                 consolidateData.innerHTML += marksheetHTML;
-
+            
+                // Display club map data for the current student
+                clubMapData.innerHTML = '<pre>' + JSON.stringify(student, null, 2).replace(/\n/g, '<br>') + '</pre>';
+            
                 document.getElementById('write-button').removeAttribute('hidden');
             }
 
@@ -264,6 +259,20 @@
             // Display the initial data in the table
 
             updateTable(displayedData, 0);
+        }
+
+        function nextStudent() {
+            if (currentStudentIndex < studentList.length - 1) {
+                currentStudentIndex++;
+                updateTable(displayedData, 1);
+            }
+        }
+
+        function prevStudent() {
+            if (currentStudentIndex > 0) {
+                currentStudentIndex--;
+                updateTable(displayedData, 1);
+            }
         }
     </script>
 
