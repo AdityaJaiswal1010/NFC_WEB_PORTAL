@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,199 +12,261 @@
             margin-top: 20px;
         }
 
-        table, th, td {
+        table,
+        th,
+        td {
             border: 1px solid black;
         }
 
-        th, td {
+        th,
+        td {
             padding: 8px;
             text-align: left;
         }
     </style>
 </head>
+
 <body>
 
-<h1>Student Data</h1>
-<h1>Upload CSV File</h1>
+    <h1>Student Data</h1>
+    <h1>Upload CSV File</h1>
 
-<input type="file" id="fileInput" accept=".csv">
-<button onclick="handleFile()">Read File</button>
-<input type="text" id="searchInput" placeholder="Search by Student ID">
+    <input type="file" id="fileInput" accept=".csv">
+    <button onclick="handleFile()">Read File</button>
+    <input type="text" id="searchInput" placeholder="Search by Student ID">
 
-<button onclick="handleSearch()">Search</button>
-<a href="index.html">
-    <button>Index page</button>
-</a>
+    <button onclick="handleSearch()">Search</button>
+    <a href="index.html">
+        <button>Index page</button>
+    </a>
 
-<table id="data-table">
-    <!-- Table content will be inserted here using JavaScript -->
-</table>
-<h4 id="consolidate-data"></h4>
-<h4 id="club-map-data"></h4>
-<button type="button" hidden id="write-button" onclick="write_button_onclick()">Write</button>
+    <table id="data-table">
+        <!-- Table content will be inserted here using JavaScript -->
+    </table>
+    <h4 id="consolidate-data"></h4>
+    <h4 id="club-map-data"></h4>
+    <button type="button" hidden id="write-button" onclick="writeButtonClick()">Write</button>
 
-<script>
-    // Sample CSV data
-    let csvData;
-    let displayedData; // Store the current displayed data
+    <script>
+        // Sample CSV data
+        let csvData;
+        let displayedData; // Store the current displayed data
+        let headers; // Store headers for CSV data
 
-    function handleFile() {
-        const fileInput = document.getElementById('fileInput');
-        const file = fileInput.files[0];
+        function handleFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
 
-        if (file) {
-            const reader = new FileReader();
+            if (file) {
+                const reader = new FileReader();
 
-            reader.onload = function (e) {
-                const csvContent = e.target.result;
-                // Now 'csvContent' contains the content of the CSV file
-                console.log(csvContent);
+                reader.onload = function (e) {
+                    const csvContent = e.target.result;
+                    // Now 'csvContent' contains the content of the CSV file
+                    console.log(csvContent);
 
-                // You can process the CSV content as needed
-                processCSV(csvContent);
-            };
-
-            reader.readAsText(file);
-        } else {
-            alert('Please select a file before clicking "Read File".');
-        }
-    }
-
-    function writeButtonClick(studentId) {
-        // Add your logic for handling the "Write" button click for a specific student
-        console.log(`Write button clicked for student ID: ${studentId}`);
-        // You can perform further actions here, such as writing data or navigating to another page.
-    }
-
-    function handleSearch() {
-        const searchInput = document.getElementById('searchInput');
-        const searchTerm = searchInput.value.trim().toLowerCase();
-
-        // Filter the displayed data based on the search term
-        displayedData = csvData.filter(row => row[2].toLowerCase().includes(searchTerm));
-
-        // Update the table with the filtered data
-        if (searchInput === '' || displayedData === '' || displayedData === null || searchTerm === '') {
-            const consolidateData = document.getElementById('consolidate-data');
-            consolidateData.innerHTML = '';
-            updateTable(displayedData, 0);
-        } else
-            updateTable(displayedData, 1);
-    }
-
-    function updateTable(data, constraint) {
-        document.getElementById('write-button').setAttribute('hidden', true);
-        console.log(data);
-        // Create an object to store consolidated student data
-        const studentData = {};
-
-        // Process each row and consolidate data for each student
-        data.forEach(rowData => {
-            // Ensure each row has the correct number of columns
-            const filledRow = rowData.concat(Array(headers.length - rowData.length).fill(''));
-
-            const studentId = filledRow[2];
-
-            // If studentId is not in the object, add a new entry
-            if (!studentData[studentId]) {
-                studentData[studentId] = {
-                    courseid: filledRow[0],
-                    course: filledRow[1],
-                    registrationNumber: filledRow[3],
-                    studentId: studentId,
-                    studentName: filledRow[4],
-                    subjects: [],
+                    // You can process the CSV content as needed
+                    processCSV(csvContent);
                 };
+
+                reader.readAsText(file);
+            } else {
+                alert('Please select a file before clicking "Read File".');
+            }
+        }
+
+        function writeButtonClick(studentId) {
+            // Add your logic for handling the "Write" button click for a specific student
+            console.log(`Write button clicked for student ID: ${studentId}`);
+            // You can perform further actions here, such as writing data or navigating to another page.
+        }
+
+        function handleSearch() {
+            const searchInput = document.getElementById('searchInput');
+            const searchTerm = searchInput.value.trim().toLowerCase();
+
+            // Filter the displayed data based on the search term
+            displayedData = csvData.filter(row => row[2].toLowerCase().includes(searchTerm));
+
+            // Update the table with the filtered data
+            if (searchInput === '' || displayedData === '' || displayedData === null || searchTerm === '') {
+                const consolidateData = document.getElementById('consolidate-data');
+                consolidateData.innerHTML = '';
+                updateTable(displayedData, 0);
+            } else
+                updateTable(displayedData, 1);
+        }
+
+        function updateTable(data, constraint) {
+            document.getElementById('write-button').setAttribute('hidden', true);
+            console.log(data);
+            // Create an object to store consolidated student data
+            const studentData = {};
+
+            // Process each row and consolidate data for each student
+            data.forEach(rowData => {
+                // Ensure each row has the correct number of columns
+                const filledRow = rowData.concat(Array(headers.length - rowData.length).fill(''));
+
+                const studentId = filledRow[2];
+
+                // If studentId is not in the object, add a new entry
+                if (!studentData[studentId]) {
+                    studentData[studentId] = {
+                        courseid: filledRow[0],
+                        course: filledRow[1],
+                        registrationNumber: filledRow[3],
+                        studentId: studentId,
+                        studentName: filledRow[4],
+                        monthOfPassing: filledRow[6],
+                        yearOfPassing: filledRow[7],
+                        dob: filledRow[13],
+                        ABCno: filledRow[22],
+                        gender: filledRow[19],
+                        cgpa: filledRow[21],
+                        subjects: [],
+                    };
+                }
+
+                // Add subject details to the subjects array
+                studentData[studentId].subjects.push({
+                    subjectCode: filledRow[9],
+                    subjectDesc: filledRow[10],
+                    credit: filledRow[11],
+                    grade: filledRow[12],
+                    attendanceCode: filledRow[15],
+                    semester: filledRow[5],
+                });
+            });
+            console.log(studentData);
+            const studentList = [];
+
+            // Loop through the studentData object
+            var i=0;
+            for (const studentId in studentData) {
+                i+=1;
+                if(i==studentData.length-1)
+                    break;
+                if (Object.hasOwnProperty.call(studentData, studentId)) {
+                    // Push the student struct to the list
+                    studentList.push(studentData[studentId]);
+                }
             }
 
-            // Add subject details to the subjects array
-            studentData[studentId].subjects.push({
-                subjectCode: filledRow[9],
-                subjectDesc: filledRow[10],
-                credit: filledRow[11],
-                grade: filledRow[12],
-            });
-        });
-        console.log(studentData);
-
-        // Convert the object to a string and display it
-        if (constraint) {
-            const consolidateData = document.getElementById('consolidate-data');
-            consolidateData.innerHTML = '';
-            const clubMapData = document.getElementById('club-map-data');
+            // Print the studentList array to see the structs
+            console.log('Student List');
+            console.log(studentData);
+            console.log(studentList);
+            console.log(studentList[0]);
+            console.log(studentList.length);
+            // Convert the object to a string and display it
+            if (constraint) {
+                const consolidateData = document.getElementById('consolidate-data');
+                consolidateData.innerHTML = '';
+                const clubMapData = document.getElementById('club-map-data');
             clubMapData.innerHTML='';
             clubMapData.innerHTML = '<pre>' +JSON.stringify(studentData, null, 2).replace(/\n/g, '<br>') + '</pre>';
+                const gender=String(studentData[Object.keys(studentData)[0]].courseid);
+                console.log(gender);
+                if(gender==='1')
+                    var temp='female'
+                else
+                    var temp='male'
+                // Display student details
+                const studentDetailsHTML = `
+                    <h3>Student Details:</h3>
+                    <p><strong>Student ID:</strong> ${Object.keys(studentData)[0]}</p>
+                    <p><strong>Student Name:</strong> ${studentData[Object.keys(studentData)[0]].studentName}</p>
+                    <p><strong>Course ID:</strong> ${studentData[Object.keys(studentData)[0]].courseid}</p>
+                    <p><strong>Course:</strong> ${studentData[Object.keys(studentData)[0]].course}</p>
+                    <p><strong>Registration Number:</strong> ${studentData[Object.keys(studentData)[0]].registrationNumber}</p>
+                    <p><strong>Month of Passing:</strong> ${studentData[Object.keys(studentData)[0]].monthOfPassing}</p>
+                    <p><strong>Year of Passing:</strong> ${studentData[Object.keys(studentData)[0]].yearOfPassing}</p>
+                    <p><strong>Date of Birth:</strong> ${studentData[Object.keys(studentData)[0]].dob}</p>
+                    <p><strong>ABC Number:</strong> ${studentData[Object.keys(studentData)[0]].ABCno}</p>
+                    <p><strong>Gender:</strong> ${temp}</p>
+                    <p><strong>CGPA:</strong> ${studentData[Object.keys(studentData)[0]].cgpa}</p>
 
-            // Check if studentData has data
-            if (Object.keys(studentData).length !== 0) {
+
+                `;
+                consolidateData.innerHTML = studentDetailsHTML;
+                console.log(studentData[Object.keys(studentData)[0]].subjects.map(subject=>subject.subjectDesc));
+                // Display subjects as a list
                 const marksheetHTML = `
-                <table>
-                    <tr>
-                        <th>Subject Code</th>
-                        <th>Subject Description</th>
-                        <th>Credit</th>
-                        <th>Grade</th>
-                    </tr>
-                    ${studentData[Object.keys(studentData)[0]].subjects.map(subject => `
+                    <h3>Marksheet:</h3>
+                    <table>
                         <tr>
-                            <td>${subject.subjectCode}</td>
-                            <td>${subject.subjectDesc}</td>
-                            <td>${subject.credit}</td>
-                            <td>${subject.grade}</td>
-                        </tr>`).join('')}
-                </table>`;
+                            <th>Semester</th>
+                            <th>Subject Code</th>
+                            <th>Subject Description</th>
+                            <th> Attendance Code</th>
+                            <th>Credit</th>
+                            <th>Grade</th>
 
-                consolidateData.innerHTML = marksheetHTML;
+                        </tr>
+                        ${studentData[Object.keys(studentData)[0]].subjects.map(subject => `
+                            <tr>
+                                <td>${subject.semester}</td>
+                                <td>${subject.subjectCode}</td>
+                                <td>${subject.subjectDesc}</td>
+                                <td>${subject.attendanceCode}</td>
+                                <td>${subject.credit}</td>
+                                <td>${subject.grade}</td>
+                            </tr>`).join('')}
+                    </table>
+                `;
+                consolidateData.innerHTML += marksheetHTML;
+
                 document.getElementById('write-button').removeAttribute('hidden');
+            }
+
+            const table = document.getElementById('data-table');
+            table.innerHTML = ''; // Clear previous content
+
+            // Create table header
+            const headerRow = table.insertRow();
+            displayedData[0].forEach(headerText => {
+                const th = document.createElement('th');
+                th.appendChild(document.createTextNode(headerText));
+                headerRow.appendChild(th);
+            });
+
+            // Create table rows for consolidated student data
+            for (const rowData of data.slice(1)) {
+                const row = table.insertRow();
+
+                rowData.forEach((cellData, index) => {
+                    const cell = row.insertCell();
+
+                    if (headers[index] === 'subjectdesc') {
+                        // Display subjects as a list
+                        const subjectsList = cellData.split(',').map(subject => subject.trim()).join('<br>');
+                        cell.innerHTML = subjectsList;
+                    } else {
+                        cell.appendChild(document.createTextNode(cellData));
+                    }
+                });
             }
         }
 
-        const table = document.getElementById('data-table');
-        table.innerHTML = ''; // Clear previous content
+        function processCSV(csvContent) {
+            // Your code to process the CSV content goes here
+            // For example, you can parse the CSV and display it in the console
+            document.getElementById('write-button').setAttribute('hidden', true);
+            csvData = csvContent.split('\n').map(row => row.split(/\s*,\s*/));
+            console.log(csvData);
 
-        // Create table header
-        const headerRow = table.insertRow();
-        displayedData[0].forEach(headerText => {
-            const th = document.createElement('th');
-            th.appendChild(document.createTextNode(headerText));
-            headerRow.appendChild(th);
-        });
+            // Extract headers and data
+            headers = csvData[0];
+            displayedData = csvData;
+            const consolidateData = document.getElementById('consolidate-data');
+            consolidateData.innerHTML = '';
+            // Display the initial data in the table
 
-        // Create table rows for consolidated student data
-        for (const rowData of data.slice(1)) {
-            const row = table.insertRow();
-
-            rowData.forEach((cellData, index) => {
-                const cell = row.insertCell();
-
-                if (headers[index] === 'subjectdesc') {
-                    // Display subjects as a list
-                    const subjectsList = cellData.split(',').map(subject => subject.trim()).join('<br>');
-                    cell.innerHTML = subjectsList;
-                } else {
-                    cell.appendChild(document.createTextNode(cellData));
-                }
-            });
+            updateTable(displayedData, 0);
         }
-    }
-
-    function processCSV(csvContent) {
-        // Your code to process the CSV content goes here
-        // For example, you can parse the CSV and display it in the console
-        document.getElementById('write-button').setAttribute('hidden', true);
-        csvData = csvContent.split('\n').map(row => row.split(/\s*,\s*/));
-        console.log(csvData);
-
-        // Extract headers and data
-        headers = csvData[0];
-        displayedData = csvData;
-        const consolidateData = document.getElementById('consolidate-data');
-        consolidateData.innerHTML = '';
-        // Display the initial data in the table
-
-        updateTable(displayedData, 0);
-    }
-</script>
+    </script>
 
 </body>
+
 </html>
