@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,207 +12,316 @@
             margin-top: 20px;
         }
 
-        table, th, td {
+        table,
+        th,
+        td {
             border: 1px solid black;
         }
 
-        th, td {
+        th,
+        td {
             padding: 8px;
             text-align: left;
         }
+
+        .verified {
+            background-color: green;
+        }
     </style>
 </head>
+
 <body>
 
-<h1>Student Data</h1>
-<h1>Upload CSV File</h1>
+    <h1>Student Data</h1>
+    <h1>Upload CSV File</h1>
 
-<input type="file" id="fileInput" accept=".csv">
-<button onclick="handleFile()">Read File</button>
-<input type="text" id="searchInput" placeholder="Search by Student ID">
+    <input type="file" id="fileInput" accept=".csv">
+    <button onclick="handleFile()">Read File</button>
+    <input type="text" id="searchInput" placeholder="Search by Student ID">
 
+    <button onclick="handleSearch()">Search</button>
+    <a href="index.html">
+        <button>Index page</button>
+    </a>
 
-<button onclick="handleSearch()">Search</button>
-<a href="consolidate.html">
-    <button>Consolidate page</button>
-</a>
+    <!--<table id="data-table">
+        Table content will be inserted here using JavaScript 
+    </table>-->
+    <h4 id="consolidate-data"></h4>
+    <h4 id="club-map-data"></h4>
+    <button type="button" hidden id="write-button" onclick="writeButtonClick()">Write</button>
+    <button id="okButton" onclick="verifyStudent()">OK</button>
+    <button onclick="prevStudent()">Previous</button>
+    <button onclick="nextStudent()">Next</button>
 
-<table id="data-table">
-    <!-- Table content will be inserted here using JavaScript -->
-</table>
-<h4 id="consolidate-data"></h4>
-<button type="button" hidden id="write-button" onclick= "write_button_onclick()">Write</button>
+    <script>
+        // Sample CSV data
+        let csvData;
+        let displayedData; // Store the current displayed data
+        let headers; // Store headers for CSV data
+        let studentList = [];
+        let verifiedId = [];
+        let currentStudentIndex = 0;
 
+        function handleFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
 
-<script>
-    // Sample CSV data
-    let csvData;
-    let displayedData; // Store the current displayed data
+            if (file) {
+                const reader = new FileReader();
 
-    function handleFile() {
-        const fileInput = document.getElementById('fileInput');
-        const file = fileInput.files[0];
+                reader.onload = function (e) {
+                    const csvContent = e.target.result;
+                    // Now 'csvContent' contains the content of the CSV file
+                    console.log(csvContent);
 
-        if (file) {
-            const reader = new FileReader();
-
-            reader.onload = function (e) {
-                const csvContent = e.target.result;
-                // Now 'csvContent' contains the content of the CSV file
-                console.log(csvContent);
-
-                // You can process the CSV content as needed
-                processCSV(csvContent);
-            };
-
-            reader.readAsText(file);
-        } else {
-            alert('Please select a file before clicking "Read File".');
-        }
-    }
-
-    function writeButtonClick(studentId) {
-        // Add your logic for handling the "Write" button click for a specific student
-        console.log(`Write button clicked for student ID: ${studentId}`);
-        // You can perform further actions here, such as writing data or navigating to another page.
-    }
-
-    function handleSearch() {
-        const searchInput = document.getElementById('searchInput');
-        const searchTerm = searchInput.value.trim().toLowerCase();
-
-        // Filter the displayed data based on the search term
-        displayedData = csvData.filter(row => row[2].toLowerCase().includes(searchTerm));
-
-        // Update the table with the filtered data
-        if(searchInput==''||displayedData==''||displayedData==null||searchTerm=='')
-        {
-            const consolidateData = document.getElementById('consolidate-data');
-            consolidateData.innerHTML='';
-            updateTable(displayedData,0);
-        }
-            
-        else
-            updateTable(displayedData,1);
-
-    }
-
-    function updateTable(data,constraint) {
-        document.getElementById('write-button').setAttribute('hidden',true);
-        console.log(data);
-        // Create an object to store consolidated student data
-        const studentData = {};
-
-        // Process each row and consolidate data for each student
-        data.forEach(rowData => {
-            // Ensure each row has the correct number of columns
-            const filledRow = rowData.concat(Array(headers.length - rowData.length).fill(''));
-
-            const studentId = filledRow[2];
-
-            // If studentId is not in the object, add a new entry
-            if (!studentData[studentId]) {
-                studentData[studentId] = {
-                    courseid: filledRow[0],
-                    course: filledRow[1],
-                    registrationNumber: filledRow[3],
-                    studentId: studentId,
-                    studentName: filledRow[4],
-                    subjects: [],
+                    // You can process the CSV content as needed
+                    processCSV(csvContent);
                 };
+
+                reader.readAsText(file);
+            } else {
+                alert('Please select a file before clicking "Read File".');
+            }
+        }
+
+        function writeButtonClick(studentId) {
+            // Add your logic for handling the "Write" button click for a specific student
+            console.log(`Write button clicked for student ID: ${studentId}`);
+            // You can perform further actions here, such as writing data or navigating to another page.
+        }
+
+        function handleSearch() {
+            const searchInput = document.getElementById('searchInput');
+            const searchTerm = searchInput.value.trim().toLowerCase();
+
+            // Filter the displayed data based on the search term
+            displayedData = csvData.filter(row => row[2].toLowerCase().includes(searchTerm));
+
+            // Update the table with the filtered data
+            if (searchTerm === '') {
+                const consolidateData = document.getElementById('consolidate-data');
+                consolidateData.innerHTML = '';
+                updateTable(displayedData, 0);
+            } else {
+                currentStudentIndex = 0; // Reset the index when a new search is performed
+                updateTable(displayedData, 1);
+            }
+        }
+
+        function updateTable(data, constraint) {
+            document.getElementById('write-button').setAttribute('hidden', true);
+            console.log(data);
+            // Create an object to store consolidated student data
+            const studentData = {};
+
+            // Process each row and consolidate data for each student
+            data.forEach(rowData => {
+                // Ensure each row has the correct number of columns
+                const filledRow = rowData.concat(Array(headers.length - rowData.length).fill(''));
+
+                const studentId = filledRow[2];
+
+                // If studentId is not in the object, add a new entry
+                if (!studentData[studentId]) {
+                    studentData[studentId] = {
+                        courseid: filledRow[0],
+                        course: filledRow[1],
+                        registrationNumber: filledRow[3],
+                        studentId: studentId,
+                        studentName: filledRow[4],
+                        monthOfPassing: filledRow[6],
+                        yearOfPassing: filledRow[7],
+                        dob: filledRow[13],
+                        ABCno: filledRow[22],
+                        gender: filledRow[19],
+                        cgpa: filledRow[21],
+                        subjects: [],
+                        isVerified: 0 // Add isVerified field with initial value 0
+                    };
+                }
+
+                // Add subject details to the subjects array
+                studentData[studentId].subjects.push({
+                    subjectCode: filledRow[9],
+                    subjectDesc: filledRow[10],
+                    credit: filledRow[11],
+                    grade: filledRow[12],
+                    attendanceCode: filledRow[15],
+                    semester: filledRow[5],
+                });
+            });
+            console.log(studentData);
+            studentList = [];
+
+            // Loop through the studentData object
+            for (const studentId in studentData) {
+                if (Object.hasOwnProperty.call(studentData, studentId)) {
+                    // Push the student struct to the list
+                    studentList.push(studentData[studentId]);
+                }
             }
 
-            // Add subject details to the subjects array
-            studentData[studentId].subjects.push({
-                subjectCode: filledRow[9],
-                subjectDesc: filledRow[10],
-                credit: filledRow[11],
-                grade: filledRow[12],
-            });
-        });
-        console.log(studentData);
+            // Convert the object to a string and display it
+            if (constraint) {
+                const consolidateData = document.getElementById('consolidate-data');
+                consolidateData.innerHTML = '';
 
-        // Convert the object to a string and display it
-        if(constraint){
+                const clubMapData = document.getElementById('club-map-data');
+                clubMapData.innerHTML = ''; // Clear previous content
+
+                const student = studentList[currentStudentIndex]; // Get current student
+
+                displayStudentDetails(student);
+            }
+
+            const table = document.getElementById('data-table');
+            table.innerHTML = ''; // Clear previous content
+
+            // Create table header
+            const headerRow = table.insertRow();
+            displayedData[0].forEach(headerText => {
+                const th = document.createElement('th');
+                th.appendChild(document.createTextNode(headerText));
+                headerRow.appendChild(th);
+            });
+
+            // Create table rows for consolidated student data
+            for (const rowData of data.slice(1)) {
+                const row = table.insertRow();
+
+                rowData.forEach((cellData, index) => {
+                    const cell = row.insertCell();
+
+                    if (headers[index] === 'subjectdesc') {
+                        // Display subjects as a list
+                        const subjectsList = cellData.split(',').map(subject => subject.trim()).join('<br>');
+                        cell.innerHTML = subjectsList;
+                    } else {
+                        cell.appendChild(document.createTextNode(cellData));
+                    }
+                });
+            }
+        }
+
+        function processCSV(csvContent) {
+            // Your code to process the CSV content goes here
+            // For example, you can parse the CSV and display it in the console
+            document.getElementById('write-button').setAttribute('hidden', true);
+            csvData = csvContent.split('\n').map(row => row.split(/\s*,\s*/));
+            console.log(csvData);
+
+            // Extract headers and data
+            headers = csvData[0];
+            displayedData = csvData;
             const consolidateData = document.getElementById('consolidate-data');
-        consolidateData.innerHTML='';
-        consolidateData.innerHTML = '<pre>' +JSON.stringify(studentData, null, 2).replace(/\n/g, '<br>') + '</pre>';
-        if(studentData){
-            document.getElementById('write-button').removeAttribute('hidden');
-            
+            consolidateData.innerHTML = '';
+            // Display the initial data in the table
 
+            updateTable(displayedData, 0);
+
+            // Show the details of the first student by default
+            if (studentList.length > 0) {
+                updateTable(displayedData, 1);
+            }
         }
-        
-        //auto button
-        //const button = document.createElement('button')
 
-      //// Set the button text to 'Can you click me?'
-      //button.innerText = 'Write'
-      
-      //button.id = 'mainButton'
+        function displayStudentDetails(student) {
+            const consolidateData = document.getElementById('consolidate-data');
+            consolidateData.innerHTML = '';
 
-      // Attach the "click" event to your button
-      //button.addEventListener('click', () => {
-        // When there is a "click"
-        // it shows an alert in the browser
-        //alert(consolidateData.textContent = JSON.stringify(studentData, null, 2));
-        //button.remove();
-      //})
+            const clubMapData = document.getElementById('club-map-data');
+            clubMapData.innerHTML = ''; // Clear previous content
 
-      //document.body.appendChild(button)
+            // Determine gender
+            const temp = (student.gender === '1') ? 'female' : 'male';
+
+            // Display student details
+            const studentDetailsHTML = `
+                <h3>Student Details:</h3>
+                <p><strong>Student ID:</strong> ${student.studentId}</p>
+                <p><strong>Student Name:</strong> ${student.studentName}</p>
+                <p><strong>Course ID:</strong> ${student.courseid}</p>
+                <p><strong>Course:</strong> ${student.course}</p>
+                <p><strong>Registration Number:</strong> ${student.registrationNumber}</p>
+                <p><strong>Month of Passing:</strong> ${student.monthOfPassing}</p>
+                <p><strong>Year of Passing:</strong> ${student.yearOfPassing}</p>
+                <p><strong>Date of Birth:</strong> ${student.dob}</p>
+                <p><strong>ABC Number:</strong> ${student.ABCno}</p>
+                <p><strong>Gender:</strong> ${temp}</p>
+                <p><strong>CGPA:</strong> ${student.cgpa}</p>
+            `;
+            consolidateData.innerHTML = studentDetailsHTML;
+
+            // Display subjects as a list
+            const marksheetHTML = `
+                <h3>Marksheet:</h3>
+                <table>
+                    <tr>
+                        <th>Semester</th>
+                        <th>Subject Code</th>
+                        <th>Subject Description</th>
+                        <th>Attendance Code</th>
+                        <th>Credit</th>
+                        <th>Grade</th>
+                    </tr>
+                    ${student.subjects.map(subject => `
+                        <tr>
+                            <td>${subject.semester}</td>
+                            <td>${subject.subjectCode}</td>
+                            <td>${subject.subjectDesc}</td>
+                            <td>${subject.attendanceCode}</td>
+                            <td>${subject.credit}</td>
+                            <td>${subject.grade}</td>
+                        </tr>`).join('')}
+                </table>
+            `;
+            consolidateData.innerHTML += marksheetHTML;
+
+            // Display club map data for the current student
+            clubMapData.innerHTML = '<pre>' + JSON.stringify(student, null, 2).replace(/\n/g, '<br>') + '</pre>';
+
+            const okButton = document.getElementById('okButton');
+            if (verifiedId.includes(student.studentId) && student.isVerified === 1) {
+                okButton.disabled = true; // Disable the OK button if the student is already verified
+                okButton.classList.add('verified'); // Add the 'verified' class
+            } else {
+                okButton.disabled = false;
+                okButton.classList.remove('verified');
+            }
         }
-        
 
-        const table = document.getElementById('data-table');
-        table.innerHTML = ''; // Clear previous content
-
-        // Create table header
-        const headerRow = table.insertRow();
-        displayedData[0].forEach(headerText => {
-            const th = document.createElement('th');
-            th.appendChild(document.createTextNode(headerText));
-            headerRow.appendChild(th);
-        });
-
-        // Create table rows for consolidated student data
-        for (const rowData of data.slice(1)) {
-            const row = table.insertRow();
-
-            rowData.forEach((cellData, index) => {
-                const cell = row.insertCell();
-
-                if (headers[index] === 'subjectdesc') {
-                    // Display subjects as a list
-                    const subjectsList = cellData.split(',').map(subject => subject.trim()).join('<br>');
-                    cell.innerHTML = subjectsList;
-                } else {
-                    cell.appendChild(document.createTextNode(cellData));
-                }
-            });
-
-            
+        function verifyStudent() {
+            const student = studentList[currentStudentIndex];
+            verifyCurrentStudent();
+            displayStudentDetails(student);
         }
-        
-    }
 
-    function processCSV(csvContent) {
-        // Your code to process the CSV content goes here
-        // For example, you can parse the CSV and display it in the console
-        document.getElementById('write-button').setAttribute('hidden',true);
-        csvData = csvContent.split('\n').map(row => row.split(/\s*,\s*/));
-        console.log(csvData);
+        function verifyCurrentStudent() {
+            const student = studentList[currentStudentIndex];
+            verifiedId.push(student.studentId);
+            if (student && student.isVerified === 0) {
+                student.isVerified = 1; // Set isVerified to 1
+                const okButton = document.getElementById('okButton');
+                okButton.disabled = true; // Disable the OK button
+                okButton.classList.add('verified'); // Add the 'verified' class
+            }
+        }
 
-        // Extract headers and data
-        headers = csvData[0];
-        displayedData = csvData;
-        const consolidateData = document.getElementById('consolidate-data');
-        consolidateData.innerHTML='';
-        // Display the initial data in the table
-        
-        updateTable(displayedData,0);
+        function nextStudent() {
+            if (currentStudentIndex < studentList.length - 1) {
+                currentStudentIndex++;
+                displayStudentDetails(studentList[currentStudentIndex]);
+            }
+        }
 
-    }
-</script>
-
+        function prevStudent() {
+            if (currentStudentIndex > 0) {
+                currentStudentIndex--;
+                displayStudentDetails(studentList[currentStudentIndex]);
+            }
+        }
+    </script>
 </body>
+
 </html>

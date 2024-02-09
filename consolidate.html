@@ -4,55 +4,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSV Data Display</title>
+    <title>Student Data Display</title>
     <style>
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-top: 20px;
-        }
+        /* General Styles */
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background-color: #F0F0F0;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
 
-        table,
-        th,
-        td {
-            border: 1px solid black;
-        }
+.container {
+    width: 80%;
+    margin: 20px auto;
+    background-color: #FFF;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
 
-        th,
-        td {
-            padding: 8px;
-            text-align: left;
-        }
+h1, h3 {
+    color: #0D47A1;
+}
 
-        .verified {
-            background-color: green;
-        }
+/* Student Details Table Styling */
+.student-details-table, .marks-details-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.student-details-table th, 
+.student-details-table td,
+.marks-details-table th, 
+.marks-details-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+.student-details-table th, .marks-details-table th {
+    background-color: #005a87;
+    color: #ffffff;
+}
+
+.student-details-table tr:nth-child(even), 
+.marks-details-table tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.student-details-table tr:hover, 
+.marks-details-table tr:hover {
+    background-color: #ddf4ff;
+}
+
+.student-details-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    table-layout: fixed; /* Helps keep columns fixed width */
+}
+
+.student-details-table th, .student-details-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.student-details-table th {
+    background-color: #f2f2f2; /* Light grey background for headers */
+    width: 20%; /* Set width for headers */
+}
+
+.student-details-table td {
+    width: 30%; /* Set width for data cells */
+}
+
+/* Apply styles for th elements that span multiple columns */
+.student-details-table th[colspan] {
+    text-align: center; /* Center text for headers that span multiple columns */
+}
+
+/* Apply styles to td elements that span multiple columns */
+.student-details-table td[colspan] {
+    text-align: center; /* Center text for data cells that span multiple columns */
+}
+
+
+/* Buttons Styling */
+button {
+    background-color: #005a87;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #0073aa;
+}
+
+/* Verified Button Style */
+.verified {
+    background-color: #4CAF50;
+}
+
+/* Preformatted Text Styling for Club Map Data */
+pre {
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 5px;
+}
+
+
     </style>
 </head>
 
 <body>
 
-    <h1>Student Data</h1>
-    <h1>Upload CSV File</h1>
+    <div class="container">
+        <h1>Student Data</h1>
+        <input type="file" id="fileInput" accept=".csv">
+        <button onclick="handleFile()">Read File</button>
+        <input type="text" id="searchInput" placeholder="Search by Student ID">
+        <button onclick="handleSearch()">Search</button>
+        <a href="index.html"><button>Index page</button></a>
 
-    <input type="file" id="fileInput" accept=".csv">
-    <button onclick="handleFile()">Read File</button>
-    <input type="text" id="searchInput" placeholder="Search by Student ID">
-
-    <button onclick="handleSearch()">Search</button>
-    <a href="index.html">
-        <button>Index page</button>
-    </a>
-
-    <!--<table id="data-table">
-        Table content will be inserted here using JavaScript 
-    </table>-->
-    <h4 id="consolidate-data"></h4>
-    <h4 id="club-map-data"></h4>
-    <button type="button" hidden id="write-button" onclick="writeButtonClick()">Write</button>
-    <button id="okButton" onclick="verifyStudent()">OK</button>
-    <button onclick="prevStudent()">Previous</button>
-    <button onclick="nextStudent()">Next</button>
+        <h4 id="consolidate-data"></h4>
+        <h4 id="club-map-data"></h4>
+        <button type="button" hidden id="write-button" onclick="writeButtonClick()">Write</button>
+        <button id="okButton" onclick="verifyStudent()">OK</button>
+        <button onclick="prevStudent()">Previous</button>
+        <button onclick="nextStudent()">Next</button>
+    </div>
 
     <script>
         // Sample CSV data
@@ -229,34 +320,46 @@
         function displayStudentDetails(student) {
             const consolidateData = document.getElementById('consolidate-data');
             consolidateData.innerHTML = '';
-
-            const clubMapData = document.getElementById('club-map-data');
-            clubMapData.innerHTML = ''; // Clear previous content
-
-            // Determine gender
-            const temp = (student.gender === '1') ? 'female' : 'male';
-
-            // Display student details
+        
+            // Display student details in a multi-column table format
             const studentDetailsHTML = `
                 <h3>Student Details:</h3>
-                <p><strong>Student ID:</strong> ${student.studentId}</p>
-                <p><strong>Student Name:</strong> ${student.studentName}</p>
-                <p><strong>Course ID:</strong> ${student.courseid}</p>
-                <p><strong>Course:</strong> ${student.course}</p>
-                <p><strong>Registration Number:</strong> ${student.registrationNumber}</p>
-                <p><strong>Month of Passing:</strong> ${student.monthOfPassing}</p>
-                <p><strong>Year of Passing:</strong> ${student.yearOfPassing}</p>
-                <p><strong>Date of Birth:</strong> ${student.dob}</p>
-                <p><strong>ABC Number:</strong> ${student.ABCno}</p>
-                <p><strong>Gender:</strong> ${temp}</p>
-                <p><strong>CGPA:</strong> ${student.cgpa}</p>
+                <table class="student-details-table">
+                    <tbody>
+                        <tr>
+                            <th>REGISTER NO</th>
+                            <td>${student.studentId}</td>
+                            <th>Candidate Name</th>
+                            <td>${student.studentName}</td>
+                            <th>Course ID</th>
+                            <td>${student.courseid}</td>
+                        </tr>
+                        <tr>
+                            <th>Course</th>
+                            <td>${student.course}</td>
+                            <th>Registration Number</th>
+                            <td>${student.registrationNumber}</td>
+                            <th>Month of Passing</th>
+                            <td>${student.monthOfPassing}</td>
+                        </tr>
+                        <tr>
+                            <th>DATE OF BIRTH</th>
+                            <td>${student.dob}</td>
+                        </tr>
+                        <tr>
+                            <th>Final CGPA</th>
+                            <td colspan="5">${student.cgpa}</td>
+                        </tr>
+                    </tbody>
+                </table>
             `;
+        
             consolidateData.innerHTML = studentDetailsHTML;
-
-            // Display subjects as a list
+        
+            // Display subjects as a list in table format
             const marksheetHTML = `
                 <h3>Marksheet:</h3>
-                <table>
+                <table class="marks-details-table">
                     <tr>
                         <th>Semester</th>
                         <th>Subject Code</th>
@@ -277,10 +380,12 @@
                 </table>
             `;
             consolidateData.innerHTML += marksheetHTML;
-
+        
             // Display club map data for the current student
+            const clubMapData = document.getElementById('club-map-data');
             clubMapData.innerHTML = '<pre>' + JSON.stringify(student, null, 2).replace(/\n/g, '<br>') + '</pre>';
-
+        
+            // Handle the OK button state
             const okButton = document.getElementById('okButton');
             if (verifiedId.includes(student.studentId) && student.isVerified === 1) {
                 okButton.disabled = true; // Disable the OK button if the student is already verified
@@ -290,6 +395,7 @@
                 okButton.classList.remove('verified');
             }
         }
+        
 
         function verifyStudent() {
             const student = studentList[currentStudentIndex];
@@ -322,6 +428,7 @@
             }
         }
     </script>
-</body>
 
+</body>
 </html>
+
